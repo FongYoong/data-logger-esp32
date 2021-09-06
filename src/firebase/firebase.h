@@ -13,12 +13,18 @@
 extern FirebaseAuth auth; // The user UID can be obtained from auth.token.uid
 extern FirebaseConfig config; // FirebaseConfig data for config data
 
+#define UPDATE_FIREBASE_CONFIG_INTERVAL 2000 // Milliseconds // Interval between updating pending config changes
+extern bool pendingConfigFirebaseUpdate;
 extern bool enableLogging;
 extern float logInterval;
 extern float temperatureLimit;
 
 void firebaseSetup();
 void addLogtoFirebase(float temperatureValue, unsigned long custom_timestamp = 0);
+bool updateConfigFirebase();
+//bool updateEnableLoggingFirebase(bool value);
+//bool updateLogIntervalFirebase(float value);
+//bool updateTemperatureLimitFirebase(float value);
 void configStreamCallback(StreamData data);
 void configStreamTimeoutCallback(bool timeout);
 

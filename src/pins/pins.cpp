@@ -1,4 +1,5 @@
 #include "pins.h"
+
 SSD1306Wire lcdDisplay(0x3c, SDA, SCL);
 
 void pinsSetup() {
