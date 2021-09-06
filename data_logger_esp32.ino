@@ -43,7 +43,8 @@ void setup()
 void loop()
 {
   int potmValue = analogRead(potmPin); // read the value from the sensor
-  temperatureValue = map(potmValue, 0, 4095, 0, 50);
+  //temperatureValue = map(potmValue, 0, 4095, 0, 50);
+  temperatureValue = float(potmValue) * 50.0 / 4095.0; //12 bit adc = 4095
 
   // If offline, try reconnecting
   if ((WiFi.status() != WL_CONNECTED) && (millis() - wifiPrevMillis > WIFI_RECONNECT_INTERVAL || wifiPrevMillis == 0))
@@ -107,9 +108,9 @@ void loop()
   if (millis() - buttonPrevMillis > DEBOUNCE_DELAY || buttonPrevMillis == 0)
   {
     processInputs();
-    renderUI();
     buttonPrevMillis = millis();
   }
+  renderUI();
 
   // update config in Firebase if required
   if (pendingConfigFirebaseUpdate && (millis() - pendingConfigFirebaseUpdatePrevMillis > UPDATE_FIREBASE_CONFIG_INTERVAL || pendingConfigFirebaseUpdatePrevMillis == 0))

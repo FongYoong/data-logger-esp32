@@ -1,4 +1,6 @@
 #include "user_interface.h"
+#include "fonts/roboto_bold_8.h"
+#include "fonts/roboto_bold_12.h"
 #include "../pins/pins.h"
 #include "../firebase/firebase.h"
 
@@ -65,7 +67,7 @@ void renderUI()
                 displayEditTemperatureLimit();
             }
         }
-        else if (currentUserAction != UserAction::UA_NONE)
+        else
         {
             if (currentUserAction == UserAction::UA_LEFT)
             {
@@ -142,7 +144,7 @@ void displayHome()
     lcdDisplay.drawString(70, 24, String(temperatureLimit));  
     lcdDisplay.drawString(110, 24,"*C"); // ºC */
     // TOP
-    lcdDisplay.setFont(ArialMT_Plain_10);
+    lcdDisplay.setFont(Roboto_Bold_8);
     lcdDisplay.setTextAlignment(TEXT_ALIGN_LEFT);
     lcdDisplay.drawStringMaxWidth(0, 0, 40, enableLogging?"Log Enabled":"Log Disabled");
     if (currentHomeOption == HomeOption::HO_ENABLE_LOGGING) {
@@ -159,20 +161,20 @@ void displayHome()
         lcdDisplay.drawRect(80, 0, 120, 20);
     }
     // MIDDLE
-    lcdDisplay.setFont(ArialMT_Plain_24);
+    lcdDisplay.setFont(Roboto_Bold_12);
     lcdDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
     lcdDisplay.drawString(64, 20, String(temperatureValue) + "*C");
 
-    lcdDisplay.setFont(ArialMT_Plain_16);
+    lcdDisplay.setFont(Roboto_Bold_8);
     lcdDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
     lcdDisplay.drawString(64, 40, String(temperatureLimit) + "*C");
 
     // BOTTOM
-    lcdDisplay.setFont(ArialMT_Plain_10);
+    lcdDisplay.setFont(Roboto_Bold_8);
     lcdDisplay.setTextAlignment(TEXT_ALIGN_RIGHT);
     lcdDisplay.drawString(50, 50, WiFi.status() == WL_CONNECTED ? "WI-FI On" : "WI-FI Off");
 
-    lcdDisplay.setFont(ArialMT_Plain_10);
+    lcdDisplay.setFont(Roboto_Bold_8);
     lcdDisplay.setTextAlignment(TEXT_ALIGN_LEFT);
     lcdDisplay.drawString(78, 50, "Date and time here");
     lcdDisplay.display();
@@ -185,7 +187,7 @@ void displayEditLogInterval()
     // date, time and wifi connectivity at the bottom
     lcdDisplay.clear();
     // MIDDLE
-    lcdDisplay.setFont(ArialMT_Plain_24);
+    lcdDisplay.setFont(Roboto_Bold_12);
     lcdDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
     lcdDisplay.drawString(64, 20, String(logIntervalTemp));
     lcdDisplay.display();
@@ -197,7 +199,7 @@ void displayEditTemperatureLimit()
     // previous temperatureLimit and new temperatureLimit at the middle
     // date, time and wifi connectivity at the bottom
     lcdDisplay.clear();
-    lcdDisplay.setFont(ArialMT_Plain_24);
+    lcdDisplay.setFont(Roboto_Bold_12);
     lcdDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
     lcdDisplay.drawString(64, 20, String(temperatureLimitTemp));
     lcdDisplay.display();

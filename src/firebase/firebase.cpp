@@ -35,13 +35,13 @@ void addLogtoFirebase(float temperatureValue, unsigned long custom_timestamp)
   FirebaseJson log_json;
   //log_json.setDoubleDigits(3);
   log_json.add("temperature", temperatureValue);
-  if (Firebase.pushJSONAsync(loggingFirebaseData, "/essential_data", log_json))
+  if (Firebase.pushJSON(loggingFirebaseData, "/essential_data", log_json))
   {
     // Successfully pushed
     if (custom_timestamp == 0)
     {
       // Use Firebase's timestamp
-      if (Firebase.setTimestampAsync(loggingFirebaseData, "/essential_data/" + loggingFirebaseData.pushName() + "/dateCreated"))
+      if (Firebase.setTimestamp(loggingFirebaseData, "/essential_data/" + loggingFirebaseData.pushName() + "/dateCreated"))
       {
         // Successfully set Firebase timestamp
         Serial.println("Added log to Firebase");
@@ -54,7 +54,7 @@ void addLogtoFirebase(float temperatureValue, unsigned long custom_timestamp)
     else
     {
       // Set custom timestamp
-      if (Firebase.setIntAsync(loggingFirebaseData, "/essential_data/" + loggingFirebaseData.pushName() + "/dateCreated", custom_timestamp))
+      if (Firebase.setInt(loggingFirebaseData, "/essential_data/" + loggingFirebaseData.pushName() + "/dateCreated", custom_timestamp))
       {
         // Successfully set custom timestamp
         Serial.println("Added CUSTOM log to Firebase");
@@ -76,16 +76,16 @@ bool updateConfigFirebase()
 {
   FirebaseJson config_json;
   config_json.add("enableLogging", enableLogging);
-  config_json.add("logInterval", logInterval);
+  config_json.add("logInterval", logInterval / 1000);
   config_json.add("temperatureLimit", temperatureLimit);
-  if (Firebase.ready() && WiFi.status() == WL_CONNECTED && Firebase.setJSONAsync(configUpdateFirebaseData, "/config", config_json))
+  if (Firebase.ready() && WiFi.status() == WL_CONNECTED && Firebase.setJSON(configUpdateFirebaseData, "/config", config_json))
   {
     Serial.println("Updated config in Firebase");
     config_json.add("uid", "device");
-    if (Firebase.pushJSONAsync(configLogUpdateFirebaseData, "/config_changes", config_json))
+    if (Firebase.pushJSON(configLogUpdateFirebaseData, "/config_changes", config_json))
     {
       // Successfully pushed
-      if (Firebase.setTimestampAsync(configLogUpdateFirebaseData, "/config_changes/" + configLogUpdateFirebaseData.pushName() + "/dateCreated"))
+      if (Firebase.setTimestamp(configLogUpdateFirebaseData, "/config_changes/" + configLogUpdateFirebaseData.pushName() + "/dateCreated"))
       {
         // Successfully set Firebase timestamp
         Serial.println("Added config change to Firebase");
