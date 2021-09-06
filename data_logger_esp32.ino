@@ -19,31 +19,19 @@ unsigned long buttonPrevMillis = 0;
 #include "src/firebase/firebase.h"
 #include "src/unix_time/unix_time.h"
 #include "src/pins/pins.h"
-
-#define DEBOUNCE_DELAY 250
-int button_left = 32;
-int button_right = 33;
-int button_enter = 5;
-int button_back = 35;
+#include "src/user_interface/user_interface.h"
+#include "src/rtos/rtos.h"
 
 void setup() {
   Serial.begin(115200);
-  pinMode(button_enter, INPUT_PULLUP);
-  //pinMode(button_left, INPUT);
-  //pinMode(button_right, INPUT);
-  //pinMode(button_back, INPUT);
+  pinsSetup();
   EEPROMSetup();
   wifiSetup();
   mDashBegin(MDASH_DEVICE_PASSWORD);
   firebaseSetup();
   timeSetup();
-
-  display.init();
-  //dht.begin();
-  display.clear();
-  display.drawString(0, 0, "Booting");
-  display.display();
-  delay(1000);
+  userInterfaceSetup();
+  rtosSetup();
 }
 
 void loop() {
@@ -74,9 +62,11 @@ void loop() {
     if (temperatureValue > temperatureLimit) {
       // Exceed limit
       Serial.println("Exceeded Temperature limit!!!");
+      digitalWrite(warning_LED, HIGH);
     }
     else {
       // Within limit, Do something like blink LED
+      digitalWrite(warning_LED, LOW);
     }
     if (Firebase.ready() && WiFi.status() == WL_CONNECTED) {
       addLogtoFirebase(temperatureValue);
@@ -98,13 +88,13 @@ void loop() {
     uploadOfflineLogsPrevMillis = millis();
   }
 
-  int pressEnter = digitalRead(button_enter);
-
-  if ((millis() - buttonPrevMillis > DEBOUNCE_DELAY || buttonPrevMillis == 0) && pressEnter == LOW)
-  {
-    WiFi.disconnect();
-    Serial.println("Disconnected from WIFI");
-    buttonPrevMillis = millis();
-  }
+//  int pressEnter = digitalRead(button_enter);
+//
+//  if ((millis() - buttonPrevMillis > DEBOUNCE_DELAY || buttonPrevMillis == 0) && pressEnter == LOW)
+//  {
+//    WiFi.disconnect();
+//    Serial.println("Disconnected from WIFI");
+//    buttonPrevMillis = millis();
+//  }
 
 }

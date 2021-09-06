@@ -1,18 +1,26 @@
 #ifndef PINS_H
-  #define PINS_H
+#define PINS_H
 
 #include "Arduino.h"
-#include "DHT.h"
-#include <Wire.h>
-//#include "SSD1306.h"
 #include "SSD1306Wire.h"
+extern SSD1306Wire lcdDisplay;
 
+//#include <Wire.h>
+//#include "DHT.h"
 //#define DHTPIN 23
 //#define DHTTYPE DHT11
-//SSD1306  display(0x3c, 21, 22);
-SSD1306Wire display(0x3c, SDA, SCL);
 //DHT dht(DHTPIN, DHTTYPE);
 
+#define DEBOUNCE_DELAY 250
+const char button_left = 5;
+const char button_right = 18;
+const char button_enter = 19;
+const char button_back = 4;
+
+const char warning_LED = 2;
+
 const char potmPin = 34;    // Potentiometer
+
+void pinsSetup();
 
 #endif
