@@ -6,7 +6,6 @@
 FirebaseAuth auth; // The user UID can be obtained from auth.token.uid
 FirebaseConfig config; // FirebaseConfig data for config data
 FirebaseData configFirebaseData;
-FirebaseData loggingFirebaseData;
 
 void firebaseSetup() {
   Serial.printf("Initializing Firebase v%s\n\n", FIREBASE_CLIENT_VERSION);
@@ -18,7 +17,7 @@ void firebaseSetup() {
   config.token_status_callback = tokenStatusCallback; //Assign the callback function for the long running token generation task, see addons/TokenHelper.h
   config.max_token_generation_retry = 5; // Assign the maximum retry of token generation
   Firebase.begin(&config, &auth); // Initialize the library with the Firebase authen and config
-  configFirebaseData.setResponseSize(4096);
+  //configFirebaseData.setResponseSize(4096);
   if (!Firebase.beginStream(configFirebaseData, "/config"))
   {
     Serial.println("Could not begin config stream\nREASON: " + configFirebaseData.errorReason());
@@ -28,14 +27,15 @@ void firebaseSetup() {
 
 void addLogtoFirebase(float temperatureValue, unsigned long custom_timestamp) {
   Serial.println("------------------------------------");
+  FirebaseData loggingFirebaseData;
   FirebaseJson log_json;
   //log_json.setDoubleDigits(3);
   log_json.add("temperature", temperatureValue);
-  if (Firebase.pushJSON(loggingFirebaseData, "/essential_data", log_json)) {
+  if (Firebase.pushJSONAsync(loggingFirebaseData, "/essential_data", log_json)) {
     // Successfully pushed
     if (custom_timestamp == 0) {
       // Use Firebase's timestamp
-      if (Firebase.setTimestamp(loggingFirebaseData, "/essential_data/" + loggingFirebaseData.pushName() + "/dateCreated")) {
+      if (Firebase.setTimestampAsync(loggingFirebaseData, "/essential_data/" + loggingFirebaseData.pushName() + "/dateCreated")) {
         // Successfully set Firebase timestamp
         Serial.println("Added log to Firebase");
       }
@@ -45,7 +45,7 @@ void addLogtoFirebase(float temperatureValue, unsigned long custom_timestamp) {
     }
     else {
       // Set custom timestamp
-      if (Firebase.setInt(loggingFirebaseData, "/essential_data/" + loggingFirebaseData.pushName() + "/dateCreated", custom_timestamp)) {
+      if (Firebase.setIntAsync(loggingFirebaseData, "/essential_data/" + loggingFirebaseData.pushName() + "/dateCreated", custom_timestamp)) {
         // Successfully set custom timestamp
         Serial.println("Added CUSTOM log to Firebase");
       }

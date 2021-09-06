@@ -9,7 +9,7 @@ void wifiSetup() {
   WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_STA_DISCONNECTED);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to Wi-Fi");
-  while (wifiRetries < MAX_WIFI_RETRIES && WiFi.status() != WL_CONNECTED)
+  while (wifiRetries < 10 && WiFi.status() != WL_CONNECTED)
   {
     Serial.print(".");
     delay(300);

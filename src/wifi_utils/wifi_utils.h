@@ -6,8 +6,7 @@
 // WiFi credentials
 #define WIFI_SSID "andrewc@unifi"
 #define WIFI_PASSWORD "68488765"
-#define MAX_WIFI_RETRIES 10
-#define WIFI_RETRY_INTERVAL 60000
+#define WIFI_RECONNECT_INTERVAL 10000
 
 void wifiSetup();
 void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info);

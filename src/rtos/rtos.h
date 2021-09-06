@@ -8,6 +8,10 @@
 #define UPLOAD_OFFLINE_LOGS_PRIORITY 2
 #define WIFI_RECONNECT_PRIORITY 1
 
+extern bool enableLogging;
+extern float logInterval;
+extern float temperatureLimit;
+
 void rtosSetup();
 void LogTask(void *parameter);
 void UserInterfaceTask(void *parameter);
