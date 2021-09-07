@@ -6,8 +6,8 @@
 FirebaseAuth auth;     // The user UID can be obtained from auth.token.uid
 FirebaseConfig config; // FirebaseConfig data for config data
 FirebaseData configReceiveFirebaseData;
-FirebaseData configUpdateFirebaseData;
-FirebaseData configLogUpdateFirebaseData;
+//FirebaseData configUpdateFirebaseData;
+//FirebaseData configLogUpdateFirebaseData;
 FirebaseData loggingFirebaseData;
 
 void firebaseSetup()
@@ -76,35 +76,39 @@ bool updateConfigFirebase()
 {
   FirebaseJson config_json;
   config_json.add("enableLogging", enableLogging);
-  config_json.add("logInterval", logInterval / 1000);
+  config_json.add("logInterval", logInterval);
   config_json.add("temperatureLimit", temperatureLimit);
-  if (Firebase.ready() && WiFi.status() == WL_CONNECTED && Firebase.setJSON(configUpdateFirebaseData, "/config", config_json))
+  if (Firebase.ready() && WiFi.status() == WL_CONNECTED && Firebase.setJSON(loggingFirebaseData, "/config", config_json))
   {
     Serial.println("Updated config in Firebase");
-    config_json.add("uid", "device");
-    if (Firebase.pushJSON(configLogUpdateFirebaseData, "/config_changes", config_json))
+    FirebaseJson change_json;
+    change_json.add("enableLogging", enableLogging);
+    change_json.add("logInterval", logInterval);
+    change_json.add("temperatureLimit", temperatureLimit);
+    change_json.add("uid", "device");
+    if (Firebase.pushJSON(loggingFirebaseData, "/config_changes", change_json))
     {
       // Successfully pushed
-      if (Firebase.setTimestamp(configLogUpdateFirebaseData, "/config_changes/" + configLogUpdateFirebaseData.pushName() + "/dateCreated"))
+      if (Firebase.setTimestamp(loggingFirebaseData, "/config_changes/" + loggingFirebaseData.pushName() + "/dateCreated"))
       {
         // Successfully set Firebase timestamp
-        Serial.println("Added config change to Firebase");
+        Serial.println("Added config CHANGE to Firebase");
       }
       else
       {
-        Serial.println("Failed to set Firebase timestamp for config change: " + configLogUpdateFirebaseData.errorReason());
+        Serial.println("Failed to set Firebase timestamp for config CHANGE: " + loggingFirebaseData.errorReason());
       }
     }
     else
     {
-      Serial.println("Failed to update config change to Firebase: " + configLogUpdateFirebaseData.errorReason());
+      Serial.println("Failed to update config CHANGE to Firebase: " + loggingFirebaseData.errorReason());
     }
     return true;
   }
   else
   {
     pendingConfigFirebaseUpdate = true;
-    Serial.println("Failed to update config in Firebase: " + configUpdateFirebaseData.errorReason());
+    Serial.println("Failed to update config in Firebase: " + loggingFirebaseData.errorReason());
     return false;
   }
 }
@@ -126,7 +130,7 @@ void configStreamCallback(StreamData data)
     }
     if (logIntervalResult.success)
     {
-      logInterval = logIntervalResult.to<String>().toFloat() * 1000;
+      logInterval = atol(logIntervalResult.to<String>().c_str());
     }
     if (temperatureLimitResult.success)
     {
@@ -147,48 +151,3 @@ void configStreamTimeoutCallback(bool timeout)
     Serial.printf("Config stream error code: %d, reason: %s\n\n", configReceiveFirebaseData.httpCode(), configReceiveFirebaseData.errorReason().c_str());
   }
 }
-
-/* bool updateEnableLoggingFirebase(bool value)
-{
-  if (Firebase.ready() && WiFi.status() == WL_CONNECTED && Firebase.setBoolAsync(loggingFirebaseData, "/config/enableLogging", value))
-  {
-    Serial.println("Updated enableLogging in Firebase");
-    return true;
-  }
-  else
-  {
-    updateFirebaseConfig = true;
-    Serial.println("Failed to update enableLogging in Firebase: " + loggingFirebaseData.errorReason());
-    return false;
-  }
-} */
-/* bool updateLogIntervalFirebase(float value)
-{
-  // In seconds
-  if (Firebase.ready() && WiFi.status() == WL_CONNECTED && Firebase.setFloatAsync(loggingFirebaseData, "/config/logInterval", value))
-  {
-    Serial.println("Updated logInterval in Firebase");
-    return true;
-  }
-  else
-  {
-    updateFirebaseConfig = true;
-    Serial.println("Failed to update logInterval in Firebase: " + loggingFirebaseData.errorReason());
-    return false;
-  }
-}
-bool updateTemperatureLimitFirebase(float value)
-{
-  // In Celcius
-  if (Firebase.ready() && WiFi.status() == WL_CONNECTED && Firebase.setFloatAsync(loggingFirebaseData, "/config/temperatureLimit", value))
-  {
-    Serial.println("Updated temperatureLimit in Firebase");
-    return true;
-  }
-  else
-  {
-    updateFirebaseConfig = true;
-    Serial.println("Failed to update temperatureLimit in Firebase: " + loggingFirebaseData.errorReason());
-    return false;
-  }
-} */

@@ -4,7 +4,7 @@
 
 bool pendingConfigFirebaseUpdate = false;
 bool enableLogging = true;
-float logInterval = 1000;    // Milliseconds
+unsigned long logInterval = 1000;    // Milliseconds
 float temperatureLimit = 25; // Celcius
 float temperatureValue = 0; //  Celcius
 

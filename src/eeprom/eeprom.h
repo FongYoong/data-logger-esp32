@@ -10,7 +10,7 @@ extern Preferences preferences;
 #define UPLOAD_OFFLINE_LOGS_INTERVAL 10000 // Milliseconds // Interval between checking and uploading EEPROM logs
 
 extern bool enableLogging;
-extern float logInterval;
+extern unsigned long logInterval;
 extern float temperatureLimit;
 
 void EEPROMSetup();

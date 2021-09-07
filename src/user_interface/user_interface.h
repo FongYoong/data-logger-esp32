@@ -20,12 +20,14 @@ enum UserAction {
 };
 
 extern bool enableLogging;
-extern float logInterval;
+extern unsigned long logInterval;
 extern float temperatureLimit;
 extern float temperatureValue;
 
-#define logIntervalStep 0.1
+#define logIntervalStep 50 //milliseconds
+#define minLogInterval 500
 #define temperatureLimitStep 0.1
+#define minTemperatureLimit -273.0
 //#define INPUT_CHECK_INTERVAL 500 // Milliseconds
 
 void userInterfaceSetup();
