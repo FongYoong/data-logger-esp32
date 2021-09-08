@@ -15,6 +15,7 @@ extern FirebaseConfig config; // FirebaseConfig data for config data
 
 #define UPDATE_FIREBASE_CONFIG_INTERVAL 2000 // Milliseconds // Interval between updating pending config changes
 extern bool pendingConfigFirebaseUpdate;
+extern bool demoMode;
 extern bool enableLogging;
 extern unsigned long logInterval;
 extern float temperatureLimit;

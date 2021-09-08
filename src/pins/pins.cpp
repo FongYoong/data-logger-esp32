@@ -1,6 +1,7 @@
 #include "pins.h"
 
-SSD1306Wire lcdDisplay(0x3c, SDA, SCL);
+SSD1306Wire oledDisplay(0x3c, SDA, SCL);
+DHT dht(DHTPIN, DHTTYPE);
 
 void pinsSetup() {
     pinMode(button_left, INPUT_PULLUP);
@@ -9,5 +10,5 @@ void pinsSetup() {
     pinMode(button_back, INPUT_PULLUP);
     pinMode(warning_LED, OUTPUT);
 
-    //dht.begin();
+    dht.begin();
 }

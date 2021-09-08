@@ -6,12 +6,14 @@ Preferences preferences;
 
 void EEPROMSetup() {
   preferences.begin("data-logger", false);
+  demoMode = preferences.getBool("demoMode", true);
   enableLogging = preferences.getBool("enableLogging", true);
   logInterval = preferences.getULong("logInterval", 1000);
   temperatureLimit = preferences.getFloat("temperatureLimit", 25);
 }
 
 void updateConfigEEPROM() {
+  preferences.putBool("demoMode", demoMode);
   preferences.putBool("enableLogging", enableLogging);
   preferences.putULong("logInterval", logInterval);
   preferences.putFloat("temperatureLimit", temperatureLimit);
@@ -23,11 +25,11 @@ void addOfflineLog(float temperature) {
   unsigned long unixTime = getUnixTime();
   Serial.println("Offline time: " + String(unixTime));
   Serial.println("Offline temperature: " + String(temperature));
-  unsigned char offlineOffset = preferences.getUChar("offOffset", 0);
+  unsigned char offlineOffset = preferences.getUChar("offOffset", MIN_OFFLINE_LOGS_OFFSET);
   preferences.putFloat(("offLogTemp" + String(offlineOffset)).c_str(), temperature);
   preferences.putULong(("offLogTime" + String(offlineOffset)).c_str(), unixTime);
   preferences.putBool(("offLogPend" + String(offlineOffset)).c_str(), true);
-  preferences.putUChar("offOffset", (offlineOffset + 1) % MAX_OFFLINE_LOGS);
+  preferences.putUChar("offOffset", ((offlineOffset + 1 - MIN_OFFLINE_LOGS_OFFSET) % MAX_OFFLINE_LOGS) + MIN_OFFLINE_LOGS_OFFSET);
   bool pendingUpload = preferences.getBool(("offLogPend" + String(offlineOffset)).c_str(), false);
   Serial.println("\n------------------------------------");
 }
@@ -35,7 +37,8 @@ void addOfflineLog(float temperature) {
 void uploadOfflineLogs() {
   Serial.println("------------------------------------");
   Serial.println("Checking offline logs...");
-  for (unsigned char offset = 0; offset < MAX_OFFLINE_LOGS; offset++) {
+  const unsigned int maxOffset = MIN_OFFLINE_LOGS_OFFSET + MAX_OFFLINE_LOGS;
+  for (unsigned char offset = MIN_OFFLINE_LOGS_OFFSET; offset < maxOffset; offset++) {
     bool pendingUpload = preferences.getBool(("offLogPend" + String(offset)).c_str(), false);
     if (pendingUpload) {
       Serial.println("Uploading log " + String(offset));

@@ -1,7 +1,7 @@
 #include "unix_time.h"
 
 const long gmtOffset_sec = 28800; // 8 hours * 3600 seconds
-const int daylightOffset_sec = 3600;
+const int daylightOffset_sec = 0 * 3600;
 const char* ntpServer = "pool.ntp.org"; // NTP server to request epoch time
 
 void timeSetup() {

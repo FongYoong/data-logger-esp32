@@ -3,13 +3,13 @@
 
 #include "Arduino.h"
 #include "SSD1306Wire.h"
-extern SSD1306Wire lcdDisplay;
+extern SSD1306Wire oledDisplay;
 
-//#include <Wire.h>
-//#include "DHT.h"
-//#define DHTPIN 23
-//#define DHTTYPE DHT11
-//DHT dht(DHTPIN, DHTTYPE);
+#include <Wire.h>
+#include "DHT.h"
+#define DHTPIN 32
+#define DHTTYPE DHT11
+extern DHT dht;
 
 #define DEBOUNCE_DELAY 250
 const char button_left = 5;

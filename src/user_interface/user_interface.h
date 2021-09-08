@@ -7,17 +7,17 @@ enum UIPage {
   P_HOME,
   P_EDIT_LOG_INTERVAL,
   P_EDIT_TEMPERATURE_LIMIT
-};
+}; // represent UI page state
 
 enum HomeOption {
     HO_ENABLE_LOGGING = 0,
     HO_EDIT_LOG_INTERVAL = 1,
     HO_EDIT_TEMPERATURE_LIMIT = 2
-};
+}; // represent home state
 
 enum UserAction {
   UA_NONE, UA_ENTER, UA_BACK, UA_LEFT, UA_RIGHT
-};
+}; // represent user action
 
 extern bool enableLogging;
 extern unsigned long logInterval;

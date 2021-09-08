@@ -1,12 +1,12 @@
 #include "user_interface.h"
 #include "fonts/roboto_bold_8.h"
 #include "fonts/roboto_bold_10.h"
-#include "images/wifi_image.h"
 #include "../pins/pins.h"
 #include "../firebase/firebase.h"
+#include "../unix_time/unix_time.h"
 
 UIPage currentUIPage = UIPage::P_HOME;
-HomeOption currentHomeOption = HomeOption::HO_EDIT_LOG_INTERVAL;
+HomeOption currentHomeOption = HomeOption::HO_ENABLE_LOGGING;
 UserAction currentUserAction = UserAction::UA_NONE;
 
 unsigned long logIntervalTemp = 1000;    // Milliseconds // Store temp value
@@ -14,10 +14,10 @@ float temperatureLimitTemp = 25; // Celcius // Store temp value
 
 void userInterfaceSetup()
 {
-    lcdDisplay.init();
-    lcdDisplay.clear();
-    lcdDisplay.drawString(0, 0, "Wait ah...");
-    lcdDisplay.display();
+    oledDisplay.init();
+    oledDisplay.clear();
+    oledDisplay.drawString(0, 0, "Wait ah...");
+    oledDisplay.display();
 }
 
 void processInputs()
@@ -149,53 +149,65 @@ void displayHome()
     // 3 SELECTABLE options at the top
     // logInterval, temperatureValue and temperaturelimit at the middle
     // date, time and wifi connectivity at the bottom
-    lcdDisplay.clear();
+    oledDisplay.clear();
 
-/*     lcdDisplay.drawString(0, 24,"Logging Interval: ");
-    lcdDisplay.drawString(70, 24, String(temperatureLimit));  
-    lcdDisplay.drawString(110, 24,"*C"); // ºC */
-    // TOP
-    lcdDisplay.setFont(Roboto_Bold_8);
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_LEFT);
-    lcdDisplay.drawStringMaxWidth(0, 0, 40, enableLogging?"Disable Log":"Enable Log");
+/*     oledDisplay.drawString(0, 24,"Logging Interval: ");
+    oledDisplay.drawString(70, 24, String(temperatureLimit));  
+    oledDisplay.drawString(110, 24,"*C"); // ºC */
+
+    oledDisplay.setFont(Roboto_Bold_8);
+    oledDisplay.setTextAlignment(TEXT_ALIGN_LEFT);
+    oledDisplay.drawStringMaxWidth(0, 0, 40, enableLogging?"Disable Log":"Enable Log");
     if (currentHomeOption == HomeOption::HO_ENABLE_LOGGING) {
-        lcdDisplay.drawRect(0, 0, 30, 22);
+        oledDisplay.drawRect(0, 0, 30, 22);
     }
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
-    lcdDisplay.drawStringMaxWidth(64, 0, 40, "Log Interval");
+    oledDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
+    oledDisplay.drawStringMaxWidth(64, 0, 40, "Log Interval");
     if (currentHomeOption == HomeOption::HO_EDIT_LOG_INTERVAL) {
-        lcdDisplay.drawRect(50, 0, 30, 22);
+        oledDisplay.drawRect(50, 0, 30, 22);
     }
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_RIGHT);
-    lcdDisplay.drawStringMaxWidth(128, 0, 40, "Temp. Limit");
+    oledDisplay.setTextAlignment(TEXT_ALIGN_RIGHT);
+    oledDisplay.drawStringMaxWidth(128, 0, 40, "Temp. Limit");
     if (currentHomeOption == HomeOption::HO_EDIT_TEMPERATURE_LIMIT) {
-        lcdDisplay.drawRect(98, 0, 30, 22);
-    }
-    // MIDDLE
-    lcdDisplay.setFont(Roboto_Bold_10);
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
-    lcdDisplay.drawString(32, 28, String(temperatureValue) + "*C");
-
-    lcdDisplay.setFont(Roboto_Bold_8);
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
-    lcdDisplay.drawString(32, 44, "Limit:" + String(temperatureLimit) + "*C");
-
-    lcdDisplay.setFont(Roboto_Bold_8);
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_RIGHT);
-    lcdDisplay.drawString(128, 44, String(logInterval/1000.0));
-
-    // BOTTOM
-/*     lcdDisplay.setFont(Roboto_Bold_8);
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_LEFT);
-    lcdDisplay.drawString(8, 50, WiFi.status() == WL_CONNECTED ? "Connnected" : "Not Connected"); */
-    if (WiFi.status() == WL_CONNECTED) {
-        lcdDisplay.drawXbm(16, 50, 20, 12, Wifi_Image);
+        oledDisplay.drawRect(98, 0, 30, 22);
     }
 
-    lcdDisplay.setFont(Roboto_Bold_8);
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_RIGHT);
-    lcdDisplay.drawString(128, 50, "Date/Time");
-    lcdDisplay.display();
+    oledDisplay.setFont(Roboto_Bold_10);
+    oledDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
+    oledDisplay.drawString(32, 28, String(temperatureValue) + "*C");
+
+    if (temperatureValue > temperatureLimit)
+    {
+        oledDisplay.setFont(Roboto_Bold_8);
+        oledDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
+        oledDisplay.drawString(32, 44, "Exceeding limit!");
+    }
+
+/*     oledDisplay.setFont(Roboto_Bold_8);
+    oledDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
+    oledDisplay.drawString(32, 44, "Limit:" + String(temperatureLimit) + "*C"); */
+
+/*     oledDisplay.setFont(Roboto_Bold_8);
+    oledDisplay.setTextAlignment(TEXT_ALIGN_RIGHT);
+    oledDisplay.drawString(128, 28, "Log:" String(logInterval/1000.0) + "secs"); */
+
+    oledDisplay.setFont(Roboto_Bold_8);
+    oledDisplay.setTextAlignment(TEXT_ALIGN_RIGHT);
+    oledDisplay.drawString(128, 28, WiFi.status() == WL_CONNECTED ? "Online" : "Offline");
+
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo)) {
+        Serial.println("Failed to obtain time");
+    }
+    else {
+        char timeString[10];
+        strftime(timeString, 10, "%H:%M:%S", &timeinfo);
+        oledDisplay.setFont(Roboto_Bold_8);
+        oledDisplay.setTextAlignment(TEXT_ALIGN_RIGHT);
+        oledDisplay.drawString(128, 50, timeString);
+        oledDisplay.display();
+    }
+
 }
 
 void displayEditLogInterval()
@@ -203,17 +215,16 @@ void displayEditLogInterval()
     // 2 static options at the top
     // previous logInterval and new logInterval at the middle
     // date, time and wifi connectivity at the bottom
-    lcdDisplay.clear();
-    // MIDDLE
-    lcdDisplay.setFont(Roboto_Bold_10);
+    oledDisplay.clear();
+    oledDisplay.setFont(Roboto_Bold_10);
 
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
-    lcdDisplay.drawString(64, 5, "Log Interval");
-    lcdDisplay.display();
+    oledDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
+    oledDisplay.drawString(64, 5, "Log Interval");
+    oledDisplay.display();
 
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
-    lcdDisplay.drawString(64, 30, String(logIntervalTemp / 1000));
-    lcdDisplay.display();
+    oledDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
+    oledDisplay.drawString(64, 30, String(logIntervalTemp / 1000.0));
+    oledDisplay.display();
 }
 
 void displayEditTemperatureLimit()
@@ -221,14 +232,14 @@ void displayEditTemperatureLimit()
     // 2 static options at the top
     // previous temperatureLimit and new temperatureLimit at the middle
     // date, time and wifi connectivity at the bottom
-    lcdDisplay.clear();
-    lcdDisplay.setFont(Roboto_Bold_10);
+    oledDisplay.clear();
+    oledDisplay.setFont(Roboto_Bold_10);
 
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
-    lcdDisplay.drawString(64, 5, "Temperature Limit");
-    lcdDisplay.display();
+    oledDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
+    oledDisplay.drawString(64, 5, "Temperature Limit");
+    oledDisplay.display();
 
-    lcdDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
-    lcdDisplay.drawString(64, 30, String(temperatureLimitTemp));
-    lcdDisplay.display();
+    oledDisplay.setTextAlignment(TEXT_ALIGN_CENTER);
+    oledDisplay.drawString(64, 30, String(temperatureLimitTemp));
+    oledDisplay.display();
 }

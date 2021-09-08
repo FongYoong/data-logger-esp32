@@ -75,6 +75,7 @@ void addLogtoFirebase(float temperatureValue, unsigned long custom_timestamp)
 bool updateConfigFirebase()
 {
   FirebaseJson config_json;
+  config_json.add("demoMode", demoMode);
   config_json.add("enableLogging", enableLogging);
   config_json.add("logInterval", logInterval);
   config_json.add("temperatureLimit", temperatureLimit);
@@ -82,6 +83,7 @@ bool updateConfigFirebase()
   {
     Serial.println("Updated config in Firebase");
     FirebaseJson change_json;
+    change_json.add("demoMode", demoMode);
     change_json.add("enableLogging", enableLogging);
     change_json.add("logInterval", logInterval);
     change_json.add("temperatureLimit", temperatureLimit);
@@ -118,12 +120,18 @@ void configStreamCallback(StreamData data)
   if (data.dataType() == "json")
   {
     FirebaseJson *config_json = data.to<FirebaseJson *>();
+    FirebaseJsonData demoModeResult;
     FirebaseJsonData enableLoggingResult;
     FirebaseJsonData logIntervalResult;
     FirebaseJsonData temperatureLimitResult;
+    config_json->get(demoModeResult, "demoMode");
     config_json->get(enableLoggingResult, "enableLogging");
     config_json->get(logIntervalResult, "logInterval");
     config_json->get(temperatureLimitResult, "temperatureLimit");
+    if (demoModeResult.success)
+    {
+      demoMode = demoModeResult.to<bool>();
+    }
     if (enableLoggingResult.success)
     {
       enableLogging = enableLoggingResult.to<bool>();

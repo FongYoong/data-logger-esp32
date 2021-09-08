@@ -2,6 +2,8 @@
 #define MDASH_DEVICE_PASSWORD "fJk90L99Sy91G5WgYDO4Kg7qQ"
 #include <mDash.h>
 
+bool demoMode = true;
+
 bool pendingConfigFirebaseUpdate = false;
 bool enableLogging = true;
 unsigned long logInterval = 1000;    // Milliseconds
@@ -14,7 +16,6 @@ float temperatureValue = 0; //  Celcius
 #include "src/unix_time/unix_time.h"
 #include "src/pins/pins.h"
 #include "src/user_interface/user_interface.h"
-//#include "src/rtos/rtos.h"
 
 // Time tracking
 unsigned long wifiPrevMillis = 0;
@@ -28,8 +29,6 @@ unsigned long buttonPrevMillis = 0;
 void setup()
 {
   Serial.begin(115200);
-  //disableCore0WDT();
-  //disableCore1WDT();
   pinsSetup();
   EEPROMSetup();
   wifiSetup();
@@ -37,14 +36,36 @@ void setup()
   firebaseSetup();
   timeSetup();
   userInterfaceSetup();
-  //rtosSetup();
 }
 
 void loop()
 {
-  int potmValue = analogRead(potmPin); // read the value from the sensor
-  //temperatureValue = map(potmValue, 0, 4095, 0, 50);
-  temperatureValue = float(potmValue) * 50.0 / 4095.0; //12 bit adc = 4095
+  if (demoMode) {
+    int potmValue = analogRead(potmPin); // read the value from potentiometer
+    temperatureValue = float(potmValue) * 50.0 / 4095.0; //12 bit adc = 4095
+  }
+  else {
+    float temp = dht.readTemperature();
+    // Check if any reads failed and exit early (to try again).
+    if (isnan(temp) ) {
+      Serial.println(F("Failed to read from DHT sensor!"));
+    }
+    else {
+      temperatureValue = temp;
+    }
+  }
+  
+  if (temperatureValue > temperatureLimit)
+  {
+    // Exceed limit
+    Serial.println("Exceeded Temperature limit!!!");
+    digitalWrite(warning_LED, HIGH);
+  }
+  else
+  {
+    // Within limit, Do something like blink LED
+    digitalWrite(warning_LED, LOW);
+  }
 
   // If offline, try reconnecting
   if ((WiFi.status() != WL_CONNECTED) && (millis() - wifiPrevMillis > WIFI_RECONNECT_INTERVAL || wifiPrevMillis == 0))
@@ -67,19 +88,7 @@ void loop()
   if (enableLogging && (millis() - loggingPrevMillis > logInterval || loggingPrevMillis == 0))
   {
     Serial.println("------------------------------------");
-    Serial.println("PotmValue: " + String(potmValue));
     Serial.println("Temperature: " + String(temperatureValue));
-    if (temperatureValue > temperatureLimit)
-    {
-      // Exceed limit
-      Serial.println("Exceeded Temperature limit!!!");
-      digitalWrite(warning_LED, HIGH);
-    }
-    else
-    {
-      // Within limit, Do something like blink LED
-      digitalWrite(warning_LED, LOW);
-    }
     if (Firebase.ready() && WiFi.status() == WL_CONNECTED)
     {
       addLogtoFirebase(temperatureValue);
