@@ -1,4 +1,5 @@
 # ESP32 Code for Data Logger
+* [Web Demo](https://github.com/FongYoong/data-logger-nextjs)
 * Drafted for Embedded Systems Design college assignment.
 * Tested with Arduino IDE.
 * Required external libraries:
