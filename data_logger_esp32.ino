@@ -2,13 +2,15 @@
 #define MDASH_DEVICE_PASSWORD "fJk90L99Sy91G5WgYDO4Kg7qQ"
 #include <mDash.h>
 
-bool demoMode = true;
-
-bool pendingConfigFirebaseUpdate = false;
-bool enableLogging = true;
-unsigned long logInterval = 1000;    // Milliseconds
-float temperatureLimit = 25; // Celcius
-float temperatureValue = 0; //  Celcius
+////////////////////////////////////////////////////////
+// Global variables
+bool demoMode = true; // If true, read temp. value from potentiometer. Otherwise, read from DHT11
+bool pendingConfigFirebaseUpdate = false; // If true, update config values in Firebase
+bool enableLogging = true; //  Log if true
+unsigned long logInterval = 1000; // Interval between logs // Milliseconds
+float temperatureLimit = 25; // Warn if exceed this limit // Celcius
+float temperatureValue = 0; // Temeperature given by DHT11 or potentiometer //  Celcius
+////////////////////////////////////////////////////////
 
 #include "src/wifi_utils/wifi_utils.h"
 #include "src/eeprom/eeprom.h"
@@ -17,6 +19,7 @@ float temperatureValue = 0; //  Celcius
 #include "src/pins/pins.h"
 #include "src/user_interface/user_interface.h"
 
+////////////////////////////////////////////////////////
 // Time tracking
 unsigned long wifiPrevMillis = 0;
 unsigned long configPrevMillis = 0;
@@ -25,6 +28,7 @@ unsigned long addOfflineLogsPrevMillis = 0;
 unsigned long uploadOfflineLogsPrevMillis = 0;
 unsigned long pendingConfigFirebaseUpdatePrevMillis = 0;
 unsigned long buttonPrevMillis = 0;
+////////////////////////////////////////////////////////
 
 void setup()
 {
@@ -41,30 +45,29 @@ void setup()
 void loop()
 {
   if (demoMode) {
-    int potmValue = analogRead(potmPin); // read the value from potentiometer
-    temperatureValue = float(potmValue) * 50.0 / 4095.0; //12 bit adc = 4095
+    int potmValue = analogRead(potmPin); // Read potentiometer analog value
+    temperatureValue = float(potmValue) * 50.0 / 4095.0; //12-bit ADC = 4095 = 50 Celcius
   }
   else {
-    float temp = dht.readTemperature();
-    // Check if any reads failed and exit early (to try again).
+    float temp = dht.readTemperature(); // Read from DHT11
+    // Check if failed
     if (isnan(temp) ) {
       Serial.println(F("Failed to read from DHT sensor!"));
     }
     else {
-      temperatureValue = temp;
+      temperatureValue = temp; // Set if successful
     }
   }
-  
+
   if (temperatureValue > temperatureLimit)
   {
-    // Exceed limit
+    // Exceed limit, turn on warning LED
     Serial.println("Exceeded Temperature limit!!!");
     digitalWrite(warning_LED, HIGH);
   }
   else
   {
-    // Within limit, Do something like blink LED
-    digitalWrite(warning_LED, LOW);
+    digitalWrite(warning_LED, LOW); // Within limit, turn off warning LED
   }
 
   // If offline, try reconnecting
@@ -73,16 +76,8 @@ void loop()
     Serial.println("Reconnecting to WiFi...");
     WiFi.disconnect();
     WiFi.reconnect();
-    wifiPrevMillis = millis();
+    wifiPrevMillis = millis(); // Reset time
   }
-
-  // Print config info
-  //  if (millis() - configPrevMillis > 2000 || configPrevMillis == 0) {
-  //    Serial.println(enableLogging ? "Enabled" : "Disabled");
-  //    Serial.println("Log Interval: " + String(logInterval));
-  //    Serial.println("Temperature Limit: " + String(temperatureLimit));
-  //    configPrevMillis = millis();
-  //  }
 
   // Log data
   if (enableLogging && (millis() - loggingPrevMillis > logInterval || loggingPrevMillis == 0))
@@ -91,49 +86,42 @@ void loop()
     Serial.println("Temperature: " + String(temperatureValue));
     if (Firebase.ready() && WiFi.status() == WL_CONNECTED)
     {
-      addLogtoFirebase(temperatureValue);
+      addLogtoFirebase(temperatureValue); // Upload log if online
     }
     else
     {
       // Add log to EEPROM if offline
-      if (millis() - addOfflineLogsPrevMillis > ADD_OFFLINE_LOG_INTERVAL || addOfflineLogsPrevMillis == 0)
+      const unsigned long interval = logInterval > ADD_OFFLINE_LOG_INTERVAL ? logInterval : ADD_OFFLINE_LOG_INTERVAL; // Use the longest interval
+      if (millis() - addOfflineLogsPrevMillis > interval || addOfflineLogsPrevMillis == 0)
       {
-        addOfflineLog(temperatureValue);
-        addOfflineLogsPrevMillis = millis();
+        addOfflineLog(temperatureValue); // Store offline log in EEPROM
+        addOfflineLogsPrevMillis = millis(); // Reset time
       }
     }
-    loggingPrevMillis = millis();
+    loggingPrevMillis = millis(); // Reset time
     Serial.println("------------------------------------");
   }
 
   // Upload leftover offline logs
   if (Firebase.ready() && WiFi.status() == WL_CONNECTED && (millis() - uploadOfflineLogsPrevMillis > UPLOAD_OFFLINE_LOGS_INTERVAL || uploadOfflineLogsPrevMillis == 0))
   {
-    uploadOfflineLogs();
-    uploadOfflineLogsPrevMillis = millis();
+    uploadOfflineLogs(); // Upload pending offline logs to Firebase
+    uploadOfflineLogsPrevMillis = millis(); // Reset time
   }
 
   // User Interface
   if (millis() - buttonPrevMillis > DEBOUNCE_DELAY || buttonPrevMillis == 0)
   {
-    processInputs();
-    buttonPrevMillis = millis();
+    processInputs(); // Check for button presses
+    buttonPrevMillis = millis(); // Reset time
   }
-  renderUI();
+  renderUI(); // Display user interface
 
-  // update config in Firebase if required
+  // Update config in Firebase if required
   if (pendingConfigFirebaseUpdate && (millis() - pendingConfigFirebaseUpdatePrevMillis > UPDATE_FIREBASE_CONFIG_INTERVAL || pendingConfigFirebaseUpdatePrevMillis == 0))
   {
-    pendingConfigFirebaseUpdate = !updateConfigFirebase();
-    pendingConfigFirebaseUpdatePrevMillis = millis();
+    pendingConfigFirebaseUpdate = !updateConfigFirebase(); // If Firebase update failed, set pendingConfigFirebaseUpdate to true
+    pendingConfigFirebaseUpdatePrevMillis = millis(); // Reset time
   }
 
-  //  int pressEnter = digitalRead(button_enter);
-  //  // Simulate no internet
-  //  if ((millis() - buttonPrevMillis > DEBOUNCE_DELAY || buttonPrevMillis == 0) && pressEnter == LOW)
-  //  {
-  //    WiFi.disconnect();
-  //    Serial.println("Disconnected from WIFI");
-  //    buttonPrevMillis = millis();
-  //  }
 }

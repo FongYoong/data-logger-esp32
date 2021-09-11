@@ -11,9 +11,11 @@
 #define DATABASE_URL "https://data-logger-abda2-default-rtdb.asia-southeast1.firebasedatabase.app"
 
 extern FirebaseAuth auth; // The user UID can be obtained from auth.token.uid
-extern FirebaseConfig config; // FirebaseConfig data for config data
+extern FirebaseConfig config; // Firebase Config data
 
 #define UPDATE_FIREBASE_CONFIG_INTERVAL 2000 // Milliseconds // Interval between updating pending config changes
+
+// Access global variables
 extern bool pendingConfigFirebaseUpdate;
 extern bool demoMode;
 extern bool enableLogging;
